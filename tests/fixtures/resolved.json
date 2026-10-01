@@ -1,0 +1,26 @@
+{
+  "schema": "vpremises://infrastructure/resolved-environment/v1",
+  "environment": {
+    "environment_id": "federation-primary",
+    "driver": "incus",
+    "instance_type": "virtual-machine",
+    "resources": {
+      "cpu": 2,
+      "memory_mib": 2048,
+      "root_disk_gib": 24
+    },
+    "network": { "public_listener": false },
+    "incus": {
+      "instance_name": "federation-primary",
+      "project": "federation",
+      "image": "images:debian/13/cloud",
+      "storage_pool": "default",
+      "network": "incusbr0"
+    }
+  },
+  "service": {
+    "service_id": "federation-foundation",
+    "process": { "user": "foundation" }
+  }
+}
+

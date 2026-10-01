@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Keeps provider initialization and mutation outside the Rust contract resolver.
+
+set -euo pipefail
+
+if (($# != 1)); then
+  echo "usage: scripts/plan <generated-directory>" >&2
+  exit 2
+fi
+
+generated_directory="$1"
+test -f "$generated_directory/main.tf.json"
+tofu -chdir="$generated_directory" init -lockfile=readonly
+tofu -chdir="$generated_directory" plan -detailed-exitcode
+

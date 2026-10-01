@@ -1,0 +1,54 @@
+use crate::{ResolvedEnvironment, Result};
+
+const RESOLVED_SCHEMA: &str = "vpremises://infrastructure/resolved-environment/v1";
+
+/// Validates the strict subset accepted by the Incus renderer.
+///
+/// # Errors
+///
+/// Rejects invalid names, non-cloud images, missing placement, or unsafe resources.
+pub fn validate(resolved: &ResolvedEnvironment) -> Result<()> {
+    if resolved.schema != RESOLVED_SCHEMA || resolved.environment.driver != "incus" {
+        return Err("input must be a resolved Incus environment".into());
+    }
+    let incus = resolved
+        .environment
+        .incus
+        .as_ref()
+        .ok_or("missing Incus placement")?;
+    validate_name(&incus.instance_name)?;
+    validate_name(&incus.project)?;
+    if !incus.image.starts_with("images:") || !incus.image.ends_with("/cloud") {
+        return Err("Incus image must be an images: cloud-init image".into());
+    }
+    if incus.storage_pool.is_empty() || incus.network.is_empty() {
+        return Err("Incus storage pool and network are required".into());
+    }
+    if resolved.environment.resources.cpu == 0
+        || resolved.environment.resources.memory_mib < 128
+        || resolved.environment.resources.root_disk_gib == 0
+    {
+        return Err("Incus resources must be finite and non-zero".into());
+    }
+    if resolved.service.process.user == "root" {
+        return Err("service user cannot be root".into());
+    }
+    Ok(())
+}
+
+fn validate_name(value: &str) -> Result<()> {
+    let valid = (1..=63).contains(&value.len())
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+        && value.as_bytes().first().is_some_and(u8::is_ascii_lowercase)
+        && value
+            .as_bytes()
+            .last()
+            .is_some_and(u8::is_ascii_alphanumeric);
+    if valid {
+        Ok(())
+    } else {
+        Err(format!("invalid Incus DNS-compatible name: {value}"))
+    }
+}
