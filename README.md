@@ -1,25 +1,28 @@
-# vPremises Incus Driver
+# vpremises-incus-driver
 
-This repository validates a resolved vPremises environment and renders
-OpenTofu JSON for the official `lxc/incus` provider. The generated declaration
-contains one restricted project, one resource-limited profile, and one
-non-ephemeral VM or system container. It never accepts a provider credential
-or exposes the Incus API.
+Render reviewed placement declarations into OpenTofu configuration for Incus.
 
-```bash
-cargo run -- render tests/fixtures/resolved.json /tmp/main.tf.json
+## What you can do
+
+- Validate resolved VM or container requirements.
+- Generate provider configuration for review before deployment.
+
+## Current scope
+
+Rendering does not run OpenTofu or create Incus resources. The operator supplies the deployment credentials and approval.
+
+Package distribution is not activated by this documentation. Use the checked-in source and the declared dependency versions; published availability must be verified separately.
+
+## Getting started
+
+Install Rust 1.97 or newer and make the declared dependencies available. Use the configured private registry when a dependency is not distributed publicly. Run from this repository:
+
+```sh
+cargo test --locked
 ```
 
-The cloud-init payload creates only a locked service account. It deliberately
-does not upgrade packages or embed an SSH key. Recurring convergence belongs
-to the idempotent Ansible roles in `vpremises-infrastructure`.
+## Documentation and source
 
-OpenTofu is not installed or executed by the renderer. An operator first
-reviews the generated JSON, initializes the provider lock file, runs a plan,
-and only then performs an approved apply. `scripts/plan` requires an existing
-read-only dependency lock and never calls `apply`.
+[Usage guide](docs/getting-started.md)
 
-Incus projects isolate profiles and storage metadata. The generated project is
-restricted, disallows destructive project removal, and attaches only the
-declared private network and root storage pool.
-
+[Implementation and public interfaces](src) · [Verification cases](tests) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [License](LICENSE) · [Attribution notices](NOTICE)
