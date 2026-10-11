@@ -97,7 +97,11 @@ pub fn render(resolved: &ResolvedEnvironment) -> Result<Value> {
 }
 
 fn cloud_init(user: &str) -> String {
-    format!(
-        "#cloud-config\npackage_update: false\npackage_upgrade: false\nusers:\n  - name: {user}\n    lock_passwd: true\n    shell: /usr/sbin/nologin\n"
-    )
+    // JSON is a YAML-compatible structured document; input never becomes YAML syntax.
+    let config = json!({
+        "package_update": false,
+        "package_upgrade": false,
+        "users": [{ "name": user, "lock_passwd": true, "shell": "/usr/sbin/nologin" }]
+    });
+    format!("#cloud-config\n{config}\n")
 }
