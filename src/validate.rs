@@ -30,8 +30,18 @@ pub fn validate(resolved: &ResolvedEnvironment) -> Result<()> {
     {
         return Err("Incus resources must be finite and non-zero".into());
     }
-    if resolved.service.process.user == "root" {
-        return Err("service user cannot be root".into());
+    let user = &resolved.service.process.user;
+    if user == "root"
+        || !(1..=32).contains(&user.len())
+        || !user.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-')
+        })
+        || !user
+            .as_bytes()
+            .first()
+            .is_some_and(|byte| byte.is_ascii_lowercase() || *byte == b'_')
+    {
+        return Err("service user must be a non-root account name: [a-z_][a-z0-9_-]{0,31}".into());
     }
     Ok(())
 }
